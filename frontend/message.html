@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat | Message</title>
+</head>
+<style>
+    #body-for-chat {
+        margin: 100px;
+    }
+
+    .chatroom {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: aquamarine;
+        margin: 0 150px;
+    }
+
+    .select-room {
+        display: block;
+        justify-content: start;
+        align-items: start;
+        background-size: cover;
+    }
+
+    body {
+        background-color: rgb(168, 167, 166);
+        font-family: 'fantasy', 'cursive', 'Cambria';
+    }
+    .message{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr;
+        row-gap: 10px;
+        scroll-behavior: smooth;
+        overflow-y: scroll;
+        scroll-snap-type: none;
+        font-family: 'Peddana';
+    }
+    .message:nth-child(0){
+        text-align: right;
+        display: block;
+        align-items: end;
+    }
+    .receive{
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 5px;
+        background-color: aliceblue;
+    }
+    .receive small {
+        position: absolute;
+        top: 10px;
+    }
+    .chat-form{
+        background-attachment: fixed;
+        position: sticky;
+        bottom: 0;
+        display: flex;
+        background-color: rgb(136, 132, 132);
+        width: 100%;
+    }
+</style>
+
+<body>
+    <section id="chat-app">
+        <section class="chatroom">
+            <div class="select-room">
+                <div class="message" id="chatContainer">
+                    {% for index in messages %}
+                        {% if index.sender != username %}
+                            <div class="receive">
+                                <p>{{index.message}} - <strong>{{index.sender}}</strong></p>
+                                <small>{{index.created_at | timesince}}</small>
+                            </div>
+                            {% else %}
+                            <div style="background-color: black; color: whitesmoke; border-radius: 15px 15px 15px 0;margin: 5px;" class="send">
+                                <p style="margin: 5px;">{{index.message}} - <small>{{index.created_at | timesince}}</small></p>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="chat-form">
+                    <form id="message-form" action="" method="post">
+                        {% csrf_token %}
+                        <label for="message">Message:</label>
+                        <textarea style="display: flex; align-items: center;" id="msg" name="message" cols="60" rows="2" value="" placeholder="Message"></textarea>
+                        <button style="padding: 10px 20px; background-color: green; border: none; cursor: pointer;" type="submit" value="Submit">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </section>
+</body>
+
+<script>
+    function scrollToBottom(){
+        var chatContainer = document.getElementById("chatContainer");
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    }
+    // Switch between https and http connection
+    const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room}}/`
+
+    // Create new websocket connection
+    const socket = new WebSocket(wsEndpoint)
+
+    // Successful connection event
+    socket.onopen = (event)=>{
+        console.log("Websocket connection opened");
+    };
+
+    // socket disconnection event
+    socket.onclose = (event) => {
+        console.log("Websocket connection closed");
+    }; 
+
+    // Prevent form reload on submit
+    document.getElementById("message-form").addEventListener("submit", function(event){
+        event.preventDefault(); 
+        const message = document.getElementById("msg").value
+        console.log(message);
+        socket.send(
+            JSON.stringify(
+                {
+                    'message':message,
+                    'room_name': '{{room}}',
+                    'sender':'{{username}}'
+                }
+            )
+        )
+    })
+
+    // Getting server side response from the consumer
+    socket.addEventListener("message", (event)=> {
+        const messageData = JSON.parse(event.data)["message"];
+        console.log(messageData);
+
+        // Grab values sent from backend by the consumer module
+        var sender = messageData["sender"]
+        var message= messageData["message"];
+        console.log(sender);
+
+        // Empty the message input field after submit
+        if (sender == '{{user}}'){
+            document.getElementById("msg").value = "";
+        }
+
+        // Append message to chatbox
+        var messageDiv = document.querySelector('.message');
+
+        if (sender != '{{user}}'){ // Assuming you have a variable 'currentUser to hold'
+            messageDiv.innerHTML += '<div class="receive"><p style="color: #000;">' + message + '<strong>-' + sender + '</strong></p></div>';
+        }else{
+            messageDiv.innerHTML += '<div class="send"><p style="color: #000;">' + message + '</p></div>';
+        }
+        // scroll directly to the last message
+        scrollToBottom()
+    })
+</script>
+
+</html>

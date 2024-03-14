@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat | Home</title>
+</head>
+
+<style>
+    #body-for-chat{
+        margin: 100px;
+    }
+    .chatroom{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: aquamarine;
+        margin: 30px;
+    }
+    .select-room{
+        display: block;
+        justify-content: center;
+        align-items: center;
+    }
+    body{
+        background-color: rgb(168, 167, 166);
+        font-family: 'Segoe UI', Tahoma, "Geneva", Verdana, sans-serif, "cursive";
+    }
+    .chat-form input{
+        padding: 5px 12px;
+        background-color: azure;
+        border: none;
+        margin: 5px;
+    }
+    
+</style>
+
+<body id="body-for-chat">
+    <section id="chat-app">
+        <section class="chatroom">
+            <div class="select-room">
+                <!-- <a href="message">message</a> -->
+                <form class="chat-form" id="chat" action="" method="post">
+                    {% csrf_token %}
+                    <label for="username">Username:</label><br>
+                    <input type="text" name="username" value="" placeholder="Username"><br>
+                    <label for="room">Room:</label><br>
+                    <input type="text" name="room" value="" placeholder="Room Name"><br>
+                    <button type="submit" value="Submit">Submit</button>
+                </form>
+            </div>
+        </section>
+    </section>
+</body>
+
+</html>
