@@ -142,67 +142,98 @@
 
 
 <script>
-function scrollToBottom() {
-    const chatContainer = document.getElementById("chatContainer");
-    if (chatContainer) {
-        chatContainer.scrollTo({
-            top: chatContainer.scrollHeight,
-            behavior: 'smooth'
-        });
-    }
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-    const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room}}/`;
-    const socket = new WebSocket(wsEndpoint);
-    const currentUser = '{{username}}';
-
-    socket.onopen = () => console.log("WebSocket connection opened");
-    socket.onclose = () => console.log("WebSocket connection closed");
-
-    document.getElementById("message-form").addEventListener("submit", function (event) {
-        event.preventDefault();
-        const messageInput = document.getElementById("msg");
-        const message = messageInput.value.trim();
-        if (!message) return;
-
-        // Optimistic render
-        const messageDiv = document.querySelector('.message-container');
-        const tempMsg = document.createElement("div");
-        tempMsg.className = "send";
-        tempMsg.innerHTML = `<p>${message}</p>`;
-        messageDiv.appendChild(tempMsg);
-        scrollToBottom();
-
-        // Send to server (so it gets broadcast to all)
-        socket.send(JSON.stringify({
-            message: message,
-            room_name: '{{room}}',
-            sender: currentUser
-        }));
-
-        messageInput.value = "";
-    });
-
-    socket.addEventListener("message", (event) => {
-        const messageData = JSON.parse(event.data)["message"];
-        const sender = messageData["sender"];
-        const message = messageData["message"];
-
-        const messageDiv = document.querySelector('.message-container');
-        if (!messageDiv) return;
-
-        // If sender is not the current user, show as received
-        if (sender !== currentUser) {
-            const newMessage = document.createElement("div");
-            newMessage.className = "receive";
-            newMessage.innerHTML = `<p>${message}</p><small>${sender}</small>`;
-            messageDiv.appendChild(newMessage);
-            scrollToBottom();
+    function scrollToBottom() {
+        const chatContainer = document.getElementById("chatContainer");
+        if (chatContainer) {
+            chatContainer.scrollTo({
+                top: chatContainer.scrollHeight,
+                behavior: 'smooth'
+            });
         }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room}}/`;
+        const socket = new WebSocket(wsEndpoint);
+        const currentUser = '{{username}}';
+
+        // Add connection status tracking
+        let isConnected = false;
+
+        socket.onopen = () => {
+            console.log("WebSocket connection opened");
+            isConnected = true;
+        };
+
+        socket.onclose = (event) => {
+            console.log("WebSocket connection closed", event);
+            isConnected = false;
+        };
+
+        socket.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+
+        document.getElementById("message-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+            const messageInput = document.getElementById("msg");
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Check if WebSocket is connected
+            if (!isConnected || socket.readyState !== WebSocket.OPEN) {
+                console.error("WebSocket is not connected");
+                alert("Connection lost. Please refresh the page.");
+                return;
+            }
+
+            // Send to server first, then let WebSocket handle the display
+            // Remove optimistic rendering to avoid duplicates
+            socket.send(JSON.stringify({
+                message: message,
+                room_name: '{{room}}',
+                sender: currentUser
+            }));
+
+            messageInput.value = "";
+        });
+
+        socket.addEventListener("message", (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log("Received WebSocket message:", data);
+                
+                const messageData = data["message"];
+                const sender = messageData["sender"];
+                const message = messageData["message"];
+
+                const messageDiv = document.querySelector('.message-container');
+                if (!messageDiv) {
+                    console.error("Message container not found");
+                    return;
+                }
+
+                // Display ALL messages (including own messages)
+                const newMessage = document.createElement("div");
+                
+                // Apply different styling based on sender
+                if (sender === currentUser) {
+                    newMessage.className = "send";
+                    newMessage.innerHTML = `<p>${message}</p>`;
+                } else {
+                    newMessage.className = "receive";
+                    newMessage.innerHTML = `<p>${message}</p><small>${sender}</small>`;
+                }
+                
+                messageDiv.appendChild(newMessage);
+                scrollToBottom();
+                
+            } catch (error) {
+                console.error("Error parsing WebSocket message:", error);
+            }
+        });
     });
-});
 </script>
 
 
