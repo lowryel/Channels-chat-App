@@ -4,10 +4,11 @@ from channels.db import database_sync_to_async
 
 from chat.models import *
 
+
 class ChatConsumer(AsyncWebsocketConsumer):
 
     async def connect(self):
-        self.room_name=f'room_{self.scope["url_route"]["kwargs"]["room_name"]}'
+        self.room_name = f'room_{self.scope["url_route"]["kwargs"]["room_name"]}'
         await self.channel_layer.group_add(self.room_name, self.channel_name)
         await self.accept()
 
@@ -18,27 +19,52 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         message = text_data_json
 
-        event = {
-            'type': 'send_message',
-            'message': message
-        }
+        event = {"type": "send_message", "message": message}
         # self.send(text_data=json.dumps({"message": message}))
         await self.channel_layer.group_send(self.room_name, event)
 
     async def send_message(self, event):
         data = event["message"]
-        print(data)
         await self.create_message(data=data)
-        response_data = {
-            'sender': data["sender"],
-            'message': data["message"]
-        }
+        response_data = {"sender": data["sender"], "message": data["message"]}
 
-        await self.send(text_data=json.dumps({'message': response_data}))
+        await self.send(text_data=json.dumps({"message": response_data}))
 
-    @database_sync_to_async
-    def create_message(self, data):
-        get_room_by_name = Room.objects.get(room_name=data["room_name"])
-        if not Message.objects.filter(message=data["message"]).exists():
-            new_message = Message(room=get_room_by_name, sender=data["sender"], message=data["message"])
-            new_message.save()
+    # @database_sync_to_async
+    # def create_message(self, data):
+    #     get_room_by_name = Room.objects.get(room_name=data["room_name"])
+    #     if not Message.objects.filter(message=data["message"]).exists():
+    #         new_message = Message(room=get_room_by_name, sender=data["sender"], message=data["message"])
+    #         new_message.save()
+
+    async def create_message(self, data):
+        """
+        More optimized version using get_or_create to avoid race conditions.
+        """
+        try:
+            get_room_by_name = await Room.objects.aget(room_name=data["room_name"])
+
+            # Use aget_or_create to avoid duplicate messages and race conditions
+            new_message, created = await Message.objects.aget_or_create(
+                room=get_room_by_name,
+                sender=data["sender"],
+                message=data["message"],
+                defaults={
+                    # Any additional fields with default values can go here
+                    # 'timestamp': timezone.now(),  # example
+                },
+            )
+
+            if created:
+                print(f"New message created: {new_message.message}")
+            else:
+                print(f"Message already exists: {new_message.message}")
+
+            return new_message
+
+        except Room.DoesNotExist:
+            print(f"Room {data['room_name']} not found")
+            return None
+        except Exception as e:
+            print(f"Error creating message: {e}")
+            return None
