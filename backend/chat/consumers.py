@@ -1,6 +1,6 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.db import database_sync_to_async
+# from channels.db import database_sync_to_async
 
 from chat.models import *
 
@@ -51,7 +51,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message=data["message"],
                 defaults={
                     # Any additional fields with default values can go here
-                    # 'timestamp': timezone.now(),  # example
+                    #'created_at': timezone.now(),  # example
                 },
             )
 

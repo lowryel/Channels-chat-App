@@ -6,5 +6,3 @@ urlpatterns = [
     path("", createRoom, name="room"),
     path("<str:room>/<str:username>/", messageView, name="message"),
 ]
-
-
