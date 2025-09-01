@@ -1,241 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chat | Message</title>
-</head>
-<style>
+  </head>
+  <style>
     body {
-        background-color: #ece5dd;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        margin: 0;
-        padding: 0;
+      background-color: #ece5dd;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
     }
 
     #chat-app {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
 
     .chatroom {
-        background-color: #fff;
-        width: 450px;
-        height: 90vh;
-        display: flex;
-        flex-direction: column;
-        border-radius: 10px;
-        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
+      background-color: #fff;
+      width: 450px;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
     }
 
     .message-container {
-        flex: 1;
-        padding: 15px;
-        overflow-y: auto;
-        background-color: #14898d73; /* Optional WhatsApp-style background */
-        background-size: cover;
-        background-position: center;
-        display: flex;
-        flex-direction: column;
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      background-color: #14898d73; /* Optional WhatsApp-style background */
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
     }
 
-    .receive, .send {
-        max-width: 70%;
-        padding: 5px 5px;
-        border-radius: 10px;
-        margin-bottom: 8px;
-        position: relative;
-        font-size: 14px;
-        line-height: 1.15;
-        word-wrap: break-word;
+    .receive,
+    .send {
+      max-width: 70%;
+      padding: 10px 15px 5px; /* Increased top padding for timestamp */
+      border-radius: 10px;
+      margin-bottom: 8px;
+      position: relative;
+      font-size: 14px;
+      line-height: 1.15;
+      word-wrap: break-word;
+    }
+
+    .message-timestamp {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      font-size: 10px;
+      color: #666;
+    }
+
+    .message-initials {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background-color: #25d366;
+      color: white;
+      text-align: center;
+      line-height: 24px;
+      font-size: 12px;
+      margin-right: 5px;
+      position: absolute;
+      top: -12px;
+      left: -12px;
+    }
+
+    .receive .message-content,
+    .send .message-content {
+      margin-top: 5px;
     }
 
     .receive {
-        background-color: #ffffff;
-        align-self: flex-start;
-        border-radius: 10px 10px 10px 0;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+      background-color: #ffffff;
+      align-self: flex-start;
+      border-radius: 10px 10px 10px 0;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
     }
 
     .send {
-        background-color: #dcf8c6;
-        align-self: flex-end;
-        border-radius: 10px 10px 0 10px;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+      background-color: #dcf8c6;
+      align-self: flex-end;
+      border-radius: 10px 10px 0 10px;
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
     }
 
-    .receive small, .send small {
-        display: block;
-        font-size: 11px;
-        color: gray;
-        text-align: right;
-        margin-top: 5px;
+    .receive small,
+    .send small {
+      display: block;
+      font-size: 11px;
+      color: gray;
+      text-align: right;
+      margin-top: 5px;
     }
 
     .chat-form {
-        display: flex;
-        padding: 10px;
-        background-color: #f0f0f0;
-        border-top: 1px solid #ddd;
+      display: flex;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-top: 1px solid #ddd;
     }
 
     .chat-form textarea {
-        flex: 1;
-        resize: none;
-        border: none;
-        border-radius: 20px;
-        padding: 10px 15px;
-        font-size: 14px;
-        outline: none;
-        background-color: #fff;
-        max-height: 80px;
+      flex: 1;
+      resize: none;
+      border: none;
+      border-radius: 20px;
+      padding: 10px 15px;
+      font-size: 14px;
+      outline: none;
+      background-color: #fff;
+      max-height: 80px;
     }
 
     .chat-form button {
-        margin-left: 10px;
-        padding: 10px 18px;
-        background-color: #25d366;
-        color: white;
-        border: none;
-        border-radius: 50px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background 0.3s;
+      margin-left: 10px;
+      padding: 10px 18px;
+      background-color: #25d366;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
     }
 
     .chat-form button:hover {
-        background-color: #20ba57;
+      background-color: #20ba57;
     }
-</style>
+  </style>
 
-<body>
+  <body>
     <section id="chat-app">
-        <section class="chatroom">
-            <div class="message-container" id="chatContainer">
-                {% for index in messages %}
-                    {% if index.sender != username %}
-                        <div class="receive">
-                            <p>{{ index.message }}</p>
-                            <small>{{ index.sender }} • {{ index.created_at|timesince }}</small>
-                        </div>
-                    {% else %}
-                        <div class="send">
-                            <p>{{ index.message }}</p>
-                            <small>{{ index.created_at|timesince }}</small>
-                        </div>
-                    {% endif %}
-                {% endfor %}
+      <section class="chatroom">
+        <div class="message-container" id="chatContainer">
+          {% for index in messages %} {% if index.sender != username %}
+          <div class="receive">
+            <span class="message-timestamp"
+              >{{ index.created_at|time:"H:i" }}</span
+            >
+            <span class="message-initials"
+              >{{ index.sender|slice:":2"|upper }}</span
+            >
+            <div class="message-content">
+              <p>{{ index.message|linebreaksbr }}</p>
             </div>
-            <div class="chat-form">
-                <form id="message-form" action="" method="post" style="display:flex;width:100%;align-items:center;">
-                    {% csrf_token %}
-                    <textarea id="msg" name="message" rows="1" placeholder="Type a message"></textarea>
-                    <button type="submit">Send</button>
-                </form>
+          </div>
+          {% else %}
+          <div class="send">
+            <span class="message-timestamp"
+              >{{ index.created_at|time:"H:i" }}</span
+            >
+            <div class="message-content">
+              <p>{{ index.message|linebreaksbr }}</p>
             </div>
-        </section>
+          </div>
+          {% endif %} {% endfor %}
+        </div>
+        <div class="chat-form">
+          <form
+            id="message-form"
+            action=""
+            method="post"
+            style="display: flex; width: 100%; align-items: center"
+          >
+            {% csrf_token %}
+            <textarea
+              id="msg"
+              name="message"
+              rows="1"
+              placeholder="Type a message"
+            ></textarea>
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </section>
     </section>
-</body>
+  </body>
 
-
-<script>
+  <script>
     function scrollToBottom() {
-        const chatContainer = document.getElementById("chatContainer");
-        if (chatContainer) {
-            chatContainer.scrollTo({
-                top: chatContainer.scrollHeight,
-                behavior: 'smooth'
-            });
-        }
+      const chatContainer = document.getElementById("chatContainer");
+      if (chatContainer) {
+        chatContainer.scrollTo({
+          top: chatContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      }
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        const websocketProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-        const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room}}/`;
-        const socket = new WebSocket(wsEndpoint);
-        const currentUser = '{{username}}';
+      const websocketProtocol =
+        window.location.protocol === "https:" ? "wss" : "ws";
+      const wsEndpoint = `${websocketProtocol}://${window.location.host}/ws/notification/{{room}}/`;
+      const socket = new WebSocket(wsEndpoint);
+      const currentUser = "{{username}}";
 
-        // Add connection status tracking
-        let isConnected = false;
+      // Add connection status tracking
+      let isConnected = false;
 
-        socket.onopen = () => {
-            console.log("WebSocket connection opened");
-            isConnected = true;
-        };
+      socket.onopen = () => {
+        console.log("WebSocket connection opened");
+        isConnected = true;
+      };
 
-        socket.onclose = (event) => {
-            console.log("WebSocket connection closed", event);
-            isConnected = false;
-        };
+      socket.onclose = (event) => {
+        console.log("WebSocket connection closed", event);
+        isConnected = false;
+      };
 
-        socket.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
+      socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
 
-        document.getElementById("message-form").addEventListener("submit", function (event) {
-            event.preventDefault();
-            const messageInput = document.getElementById("msg");
-            const message = messageInput.value.trim();
-            if (!message) return;
+      document
+        .getElementById("message-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const messageInput = document.getElementById("msg");
+          const message = messageInput.value.trim();
+          if (!message) return;
 
-            // Check if WebSocket is connected
-            if (!isConnected || socket.readyState !== WebSocket.OPEN) {
-                console.error("WebSocket is not connected");
-                alert("Connection lost. Please refresh the page.");
-                return;
-            }
+          // Check if WebSocket is connected
+          if (!isConnected || socket.readyState !== WebSocket.OPEN) {
+            console.error("WebSocket is not connected");
+            alert("Connection lost. Please refresh the page.");
+            return;
+          }
 
-            // Send to server first, then let WebSocket handle the display
-            // Remove optimistic rendering to avoid duplicates
-            socket.send(JSON.stringify({
-                message: message,
-                room_name: '{{room}}',
-                sender: currentUser
-            }));
+          // Send to server first, then let WebSocket handle the display
+          // Remove optimistic rendering to avoid duplicates
+          socket.send(
+            JSON.stringify({
+              message: message,
+              room_name: "{{room}}",
+              sender: currentUser,
+            })
+          );
 
-            messageInput.value = "";
+          messageInput.value = "";
         });
 
-        socket.addEventListener("message", (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                console.log("Received WebSocket message:", data);
-                
-                const messageData = data["message"];
-                const sender = messageData["sender"];
-                const message = messageData["message"];
+      socket.addEventListener("message", (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("Received WebSocket message:", data);
 
-                const messageDiv = document.querySelector('.message-container');
-                if (!messageDiv) {
-                    console.error("Message container not found");
-                    return;
-                }
+          const messageData = data["message"];
+          const sender = messageData["sender"];
+          const message = messageData["message"];
 
-                // Display ALL messages (including own messages)
-                const newMessage = document.createElement("div");
-                
-                // Apply different styling based on sender
-                if (sender === currentUser) {
-                    newMessage.className = "send";
-                    newMessage.innerHTML = `<p>${message}</p>`;
-                } else {
-                    newMessage.className = "receive";
-                    newMessage.innerHTML = `<p>${message}</p><small>${sender}</small>`;
-                }
-                
-                messageDiv.appendChild(newMessage);
-                scrollToBottom();
-                
-            } catch (error) {
-                console.error("Error parsing WebSocket message:", error);
-            }
-        });
+          const messageDiv = document.querySelector(".message-container");
+          if (!messageDiv) {
+            console.error("Message container not found");
+            return;
+          }
+
+          // Display ALL messages (including own messages)
+          const newMessage = document.createElement("div");
+
+          // Apply different styling based on sender
+          if (sender === currentUser) {
+            newMessage.className = "send";
+            newMessage.innerHTML = `
+            <span class="message-timestamp">${new Date().toLocaleTimeString(
+              "en-US",
+              { hour: "2-digit", minute: "2-digit", hour12: false }
+            )}</span>
+            <div class="message-content">
+                <p>${message}</p>
+            </div>`;
+          } else {
+            newMessage.className = "receive";
+            newMessage.innerHTML = `
+            <span class="message-timestamp">${new Date().toLocaleTimeString(
+              "en-US",
+              { hour: "2-digit", minute: "2-digit", hour12: false }
+            )}</span>
+            <span class="message-initials">${sender
+              .slice(0, 2)
+              .toUpperCase()}</span>
+            <div class="message-content">
+                <p>${message}</p>
+            </div>`;
+          }
+
+          messageDiv.appendChild(newMessage);
+          scrollToBottom();
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      });
     });
-</script>
-
-
-
+  </script>
 </html>
